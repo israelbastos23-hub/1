@@ -1,0 +1,6 @@
+{
+  "name": "Kavere Car - 3D Car Mats & Accessories",
+  "description": "Official Kavere Car store: 3D custom-fit car mats, boot liners, and wiper blades kit with free UK shipping.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

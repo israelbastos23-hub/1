@@ -1,0 +1,136 @@
+import { Review } from '../types';
+
+export const REVIEWS: Review[] = [
+  {
+    id: 'rev-1',
+    author: 'Mark T.',
+    location: 'Manchester, UK',
+    rating: 5,
+    date: '14 Oct 2026',
+    vehicle: 'BYD Dolphin Mini (2024)',
+    title: 'Precision fit is no exaggeration!',
+    comment:
+      'Got these for my new BYD Dolphin Mini. Every contour matches perfectly, the high lips prevent muddy water from touching the floor carpet, and the free wipers were a fantastic bonus.',
+    verified: true,
+  },
+  {
+    id: 'rev-2',
+    author: 'Sarah L.',
+    location: 'Bristol, UK',
+    rating: 5,
+    date: '02 Oct 2026',
+    vehicle: 'Tesla Model Y (2024)',
+    title: 'Way better quality than OEM mats',
+    comment:
+      'I was hesitant between official Tesla all-weather mats and Kavere. So glad I chose Kavere! The material is premium, non-slip, zero rubber smell out of the box, and the boot liner fits snug.',
+    verified: true,
+  },
+  {
+    id: 'rev-3',
+    author: 'David P.',
+    location: 'Edinburgh, Scotland',
+    rating: 5,
+    date: '28 Sep 2026',
+    vehicle: 'BMW 3 Series (2023)',
+    title: 'Lifesaver during wet autumn weather',
+    comment:
+      'Living in Scotland means non-stop rain and mud. Cleaned them with a quick pressure washer rinse yesterday and they look brand new. The retention clips snap into the factory anchors flawlessly.',
+    verified: true,
+  },
+  {
+    id: 'rev-4',
+    author: 'James R.',
+    location: 'Surrey, UK',
+    rating: 4,
+    date: '19 Sep 2026',
+    vehicle: 'Audi Q5 (2022)',
+    title: 'Great quality and fast delivery',
+    comment:
+      'Dispatched the next day via Royal Mail. The boot liner has deep grooves which prevented grocery spillages from spreading. Very satisfied with the build quality.',
+    verified: true,
+  },
+  {
+    id: 'rev-5',
+    author: 'Emma W.',
+    location: 'Birmingham, UK',
+    rating: 5,
+    date: '08 Sep 2026',
+    vehicle: 'Ford Puma (2024)',
+    title: 'Fits like a glove, wipes clean in seconds',
+    comment:
+      'Brilliant fit around the pedals and passenger side. The free wiper blades are silent and streak-free too. 10/10 value.',
+    verified: true,
+  },
+  {
+    id: 'rev-6',
+    author: 'Oliver G.',
+    location: 'Leeds, UK',
+    rating: 5,
+    date: '22 Oct 2026',
+    vehicle: 'Nissan Qashqai (2024)',
+    title: 'Rear floor protection is unmatched',
+    comment:
+      'Kids always track mud into the back after football practice. These high-walled rear mats completely protect the carpet underneath. Cleaning takes less than 2 minutes.',
+    verified: true,
+  },
+  {
+    id: 'rev-7',
+    author: 'Daniel K.',
+    location: 'Cardiff, Wales',
+    rating: 5,
+    date: '18 Oct 2026',
+    vehicle: 'Kia Sportage (2023)',
+    title: 'Snug laser fit with zero slippage',
+    comment:
+      'Precision laser cut is 100% accurate. The mats do not budge a millimetre while driving. Texture looks sleek and very OEM+.',
+    verified: true,
+  },
+  {
+    id: 'rev-8',
+    author: 'Charlotte B.',
+    location: 'Oxford, UK',
+    rating: 5,
+    date: '12 Oct 2026',
+    vehicle: 'Toyota RAV4 (2024)',
+    title: 'The boot liner saved my upholstery',
+    comment:
+      'Carried plant pots and gardening soil over the weekend. Had a small spill but the boot tray contained every drop. A quick wipe and it was spotless again.',
+    verified: true,
+  },
+  {
+    id: 'rev-9',
+    author: 'Liam H.',
+    location: 'Newcastle, UK',
+    rating: 5,
+    date: '05 Oct 2026',
+    vehicle: 'Hyundai Tucson (2023)',
+    title: 'High edges and premium heavy-duty feel',
+    comment:
+      'Noticeably thicker and sturdier than standard rubber mats. Fits perfectly around the rear air vents and seat rails. Very impressed with the quality.',
+    verified: true,
+  },
+  {
+    id: 'rev-10',
+    author: 'Sophie M.',
+    location: 'Cambridge, UK',
+    rating: 5,
+    date: '29 Sep 2026',
+    vehicle: 'Volkswagen Tiguan (2024)',
+    title: 'Boot coverage with seats folded down is ideal',
+    comment:
+      'We travel frequently with our golden retriever. The cargo protection keeps dog hair and dirt completely off the boot lining. Absolutely worth the full kit!',
+    verified: true,
+  },
+  {
+    id: 'rev-11',
+    author: 'Thomas E.',
+    location: 'Glasgow, Scotland',
+    rating: 5,
+    date: '24 Sep 2026',
+    vehicle: 'Volvo XC60 (2023)',
+    title: 'Heavy-duty protection for Scottish rain',
+    comment:
+      'The grooved channels channel water away from footwear and the boot liner is resilient against luggage scrapes. Excellent finish and quick UK delivery.',
+    verified: true,
+  },
+];
