@@ -257,15 +257,42 @@ export default function App() {
     const displayModel = selectedModel === 'Other model' ? customModel.trim() : selectedModel;
 
     // Construct destination checkout link with quantity, vehicle specifications, and deduplicated UTMify tracking
-    // Set 1 (Interior Mats + Boot Mat + Free Wipers): https://checkout.pagou.ai/checkout/chk_01M645D0YKSSGSAHHFPT8HXWYD
-    // Set 2 (Interior Mats + Free Wipers): https://checkout.pagou.ai/checkout/chk_01M645CKKW6NABB92Q1YJW93PS
+    // Set 1 (Interior Mats + Boot Mat + Free Wipers - 49.90): https://checkout.pagou.ai/checkout/chk_01M64TX0D1DN30CSRR6697Z72S
+    // Set 2 (Interior Mats + Free Wipers - 39.90): https://checkout.pagou.ai/checkout/chk_01M645CKKW6NABB92Q1YJW93PS
     const checkoutBaseUrl = isFullSet
-      ? 'https://checkout.pagou.ai/checkout/chk_01M645D0YKSSGSAHHFPT8HXWYD'
+      ? 'https://checkout.pagou.ai/checkout/chk_01M64TX0D1DN30CSRR6697Z72S'
       : 'https://checkout.pagou.ai/checkout/chk_01M645CKKW6NABB92Q1YJW93PS';
+
+    const unitPrice = isFullSet ? 49.90 : 39.90;
+    const totalPrice = Number((unitPrice * quantity).toFixed(2));
+
+    // Fire Meta Pixel AddToCart event if fbq is initialized
+    if (typeof window !== 'undefined' && typeof (window as any).fbq === 'function') {
+      try {
+        const atcEventId = `atc_1172958688595387_${Date.now()}`;
+        (window as any).fbq(
+          'track',
+          'AddToCart',
+          {
+            content_name: currentSetTitle,
+            content_category: 'Car Accessories',
+            content_ids: [isFullSet ? 'chk_01M64TX0D1DN30CSRR6697Z72S' : 'chk_01M645CKKW6NABB92Q1YJW93PS'],
+            content_type: 'product',
+            value: totalPrice,
+            currency: 'GBP',
+            num_items: quantity,
+            vehicle: `${displayMake} - ${displayModel} (${selectedYear})`,
+          },
+          { eventID: atcEventId }
+        );
+      } catch (_) {}
+    }
 
     const finalCheckoutUrl = buildCleanCheckoutUrl(checkoutBaseUrl, {
       quantity: String(quantity),
       qtd: String(quantity),
+      add_to_cart: '1',
+      add_to_basket: '1',
       make: displayMake,
       model: displayModel,
       year: selectedYear,
@@ -867,6 +894,8 @@ export default function App() {
 
                 <button
                   onClick={handleProceedToCheckout}
+                  data-action="add-to-cart"
+                  data-event="AddToCart"
                   className="w-full bg-black hover:bg-neutral-800 text-white font-bold py-3.5 px-6 rounded-lg text-xs sm:text-sm tracking-wider uppercase transition shadow-md cursor-pointer active:scale-[0.99] flex items-center justify-center"
                   type="button"
                 >
