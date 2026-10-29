@@ -257,11 +257,11 @@ export default function App() {
     const displayModel = selectedModel === 'Other model' ? customModel.trim() : selectedModel;
 
     // Construct destination checkout link with quantity, vehicle specifications, and deduplicated UTMify tracking
-    // Set 1 (Interior Mats + Boot Mat + Free Wipers): https://checkout.kaverecar.com/checkout/chk_01M633ZXM9C4BFC1DE8863QWJN
-    // Set 2 (Interior Mats + Free Wipers): https://checkout.kaverecar.com/checkout/chk_01M633YX259FE8QTMSEC0BXGHH
+    // Set 1 (Interior Mats + Boot Mat + Free Wipers): https://checkout.pagou.ai/checkout/chk_01M645D0YKSSGSAHHFPT8HXWYD
+    // Set 2 (Interior Mats + Free Wipers): https://checkout.pagou.ai/checkout/chk_01M645CKKW6NABB92Q1YJW93PS
     const checkoutBaseUrl = isFullSet
-      ? 'https://checkout.kaverecar.com/checkout/chk_01M633ZXM9C4BFC1DE8863QWJN'
-      : 'https://checkout.kaverecar.com/checkout/chk_01M633YX259FE8QTMSEC0BXGHH';
+      ? 'https://checkout.pagou.ai/checkout/chk_01M645D0YKSSGSAHHFPT8HXWYD'
+      : 'https://checkout.pagou.ai/checkout/chk_01M645CKKW6NABB92Q1YJW93PS';
 
     const finalCheckoutUrl = buildCleanCheckoutUrl(checkoutBaseUrl, {
       quantity: String(quantity),
