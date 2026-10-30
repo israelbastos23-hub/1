@@ -18,7 +18,6 @@ import {
   generateTransactionId,
   getAttributionData,
 } from './utils/tracking';
-import { CookieConsentBanner } from './components/CookieConsentBanner';
 
 // Official Brand Logo
 const LOGO_SRC = '/assets/aistudio/logo_kavere_3e05dc49.png';
@@ -1904,9 +1903,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* UK & GDPR Compliant Cookie Consent Banner with Consent Mode v2 */}
-      <CookieConsentBanner />
     </div>
   );
 }
