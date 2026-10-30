@@ -46,8 +46,8 @@ export const TRACKING_CONFIG = {
       price: 49.90,
       currency: 'GBP',
       category: 'Car Floor Mats',
-      checkoutId: 'chk_01M646VXSK2WMEQFR1034R09ZZ',
-      checkoutUrl: 'https://checkout.pagou.ai/checkout/chk_01M646VXSK2WMEQFR1034R09ZZ',
+      checkoutId: 'chk_01M65DD08WN2S3GGSQR7J6RKEZ',
+      checkoutUrl: 'https://checkout.pagou.ai/checkout/chk_01M65DD08WN2S3GGSQR7J6RKEZ',
     } as ProductConfig,
   },
 
