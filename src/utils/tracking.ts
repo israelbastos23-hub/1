@@ -132,10 +132,28 @@ export function trackPageView(pagePath?: string, pageTitle?: string): void {
     currency: TRACKING_CONFIG.CURRENCY,
   });
 
-  // Optional direct forwarding if GTM loaded them
+  // Direct forwarding to GA4
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'page_view', {
+        page_location: currentUrl,
+        page_path: currentPath,
+        page_title: currentTitle,
+      });
+    } catch (_) {}
+  }
+
+  // Direct forwarding to Meta Pixel
   if (typeof window.fbq === 'function') {
     try {
       window.fbq('track', 'PageView', {}, { eventID: `pv_${Date.now()}` });
+    } catch (_) {}
+  }
+
+  // Direct forwarding to Microsoft Clarity
+  if (typeof window.clarity === 'function') {
+    try {
+      window.clarity('set', 'page_path', currentPath);
     } catch (_) {}
   }
 }
@@ -178,6 +196,28 @@ export function trackViewItem(product: ProductConfig, vehicleInfo?: VehicleInfo)
     },
   });
 
+  // Direct GA4 view_item event
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'view_item', {
+        currency: TRACKING_CONFIG.CURRENCY,
+        value: product.price,
+        items: [
+          {
+            item_id: product.id,
+            item_name: product.name,
+            price: product.price,
+            currency: TRACKING_CONFIG.CURRENCY,
+            item_category: product.category,
+            quantity: 1,
+            item_brand: 'Kavere Car',
+            vehicle_selection: vehicleString,
+          },
+        ],
+      });
+    } catch (_) {}
+  }
+
   if (typeof window.fbq === 'function') {
     try {
       window.fbq(
@@ -192,6 +232,12 @@ export function trackViewItem(product: ProductConfig, vehicleInfo?: VehicleInfo)
         },
         { eventID: `vc_${product.id}_${Date.now()}` }
       );
+    } catch (_) {}
+  }
+
+  if (typeof window.clarity === 'function') {
+    try {
+      window.clarity('event', 'view_item');
     } catch (_) {}
   }
 }
@@ -224,6 +270,28 @@ export function trackCheckoutClick(
     vehicle_selection: vehicleString,
   });
 
+  // Direct GA4 add_to_cart event
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'add_to_cart', {
+        currency: TRACKING_CONFIG.CURRENCY,
+        value: totalPrice,
+        items: [
+          {
+            item_id: product.id,
+            item_name: product.name,
+            price: product.price,
+            currency: TRACKING_CONFIG.CURRENCY,
+            item_category: product.category,
+            quantity: quantity,
+            item_brand: 'Kavere Car',
+            vehicle_selection: vehicleString,
+          },
+        ],
+      });
+    } catch (_) {}
+  }
+
   if (typeof window.fbq === 'function') {
     try {
       window.fbq(
@@ -239,6 +307,12 @@ export function trackCheckoutClick(
         },
         { eventID: `atc_${product.id}_${Date.now()}` }
       );
+    } catch (_) {}
+  }
+
+  if (typeof window.clarity === 'function') {
+    try {
+      window.clarity('event', 'add_to_cart');
     } catch (_) {}
   }
 }
@@ -281,6 +355,29 @@ export function trackBeginCheckout(
       ],
     },
   });
+
+  // Direct GA4 begin_checkout event
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'begin_checkout', {
+        currency: TRACKING_CONFIG.CURRENCY,
+        value: totalPrice,
+        transaction_id: transactionId,
+        items: [
+          {
+            item_id: product.id,
+            item_name: product.name,
+            price: product.price,
+            currency: TRACKING_CONFIG.CURRENCY,
+            item_category: product.category,
+            quantity: quantity,
+            item_brand: 'Kavere Car',
+            vehicle_selection: vehicleString,
+          },
+        ],
+      });
+    } catch (_) {}
+  }
 
   if (typeof window.fbq === 'function') {
     try {
@@ -335,6 +432,18 @@ export function trackAddPaymentInfo(
     },
   });
 
+  // Direct GA4 add_payment_info event
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'add_payment_info', {
+        currency: TRACKING_CONFIG.CURRENCY,
+        value: totalPrice,
+        payment_type: paymentType,
+        transaction_id: transactionId,
+      });
+    } catch (_) {}
+  }
+
   if (typeof window.fbq === 'function') {
     try {
       window.fbq(
@@ -373,6 +482,17 @@ export function trackPayNowClick(
     currency: TRACKING_CONFIG.CURRENCY,
     transaction_id: transactionId,
   });
+
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'pay_now_click', {
+        currency: TRACKING_CONFIG.CURRENCY,
+        value: totalPrice,
+        transaction_id: transactionId,
+        product_id: product.id,
+      });
+    } catch (_) {}
+  }
 
   if (typeof window.fbq === 'function') {
     try {
@@ -451,6 +571,31 @@ export function trackPurchase(order: PurchaseOrder): boolean {
     },
   });
 
+  // Direct GA4 purchase event
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'purchase', {
+        transaction_id: order.transactionId,
+        value: totalPrice,
+        currency: TRACKING_CONFIG.CURRENCY,
+        tax: 0,
+        shipping: 0,
+        items: [
+          {
+            item_id: order.product.id,
+            item_name: order.product.name,
+            price: order.product.price,
+            currency: TRACKING_CONFIG.CURRENCY,
+            item_category: order.product.category,
+            quantity: order.quantity,
+            item_brand: 'Kavere Car',
+            vehicle_selection: vehicleString,
+          },
+        ],
+      });
+    } catch (_) {}
+  }
+
   if (typeof window.fbq === 'function') {
     try {
       window.fbq(
@@ -466,6 +611,12 @@ export function trackPurchase(order: PurchaseOrder): boolean {
         },
         { eventID: `pur_${order.transactionId}` }
       );
+    } catch (_) {}
+  }
+
+  if (typeof window.clarity === 'function') {
+    try {
+      window.clarity('event', 'purchase');
     } catch (_) {}
   }
 
@@ -503,6 +654,17 @@ export function trackPaymentFailed(info: PaymentFailedInfo): void {
       ],
     },
   });
+
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'payment_failed', {
+        transaction_id: info.transactionId,
+        value: totalPrice,
+        currency: TRACKING_CONFIG.CURRENCY,
+        error_code: info.errorCode || 'declined',
+      });
+    } catch (_) {}
+  }
 
   if (typeof window.fbq === 'function') {
     try {
