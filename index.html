@@ -4,34 +4,49 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Meta Pixel Code with UTMify Anti-Duplication Configuration -->
+    <!-- Google Consent Mode v2 (UK / GDPR Compliant Default Setup) -->
     <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
 
-      // Initialize Meta Pixel
-      fbq('init', '1172958688595387');
+      var savedConsent = null;
+      try {
+        savedConsent = JSON.parse(localStorage.getItem('kavere_cookie_consent'));
+      } catch (e) {}
 
-      // Disable autoConfig to prevent duplicate automatic button clicks and events with UTMify
-      fbq('set', 'autoConfig', false, '1172958688595387');
-
-      // Prevent duplicate PageView events and provide eventID for Meta CAPI / UTMify deduplication
-      (function() {
-        if (!window.__metaPageViewTracked) {
-          window.__metaPageViewTracked = true;
-          var pvEventId = 'pv_1172958688595387_' + Date.now();
-          window.__utmifyPageViewEventId = pvEventId;
-          fbq('track', 'PageView', {}, { eventID: pvEventId });
-        }
-      })();
+      if (savedConsent && savedConsent.analytics && savedConsent.marketing) {
+        gtag('consent', 'default', {
+          'ad_storage': 'granted',
+          'ad_user_data': 'granted',
+          'ad_personalization': 'granted',
+          'analytics_storage': 'granted',
+          'functionality_storage': 'granted',
+          'personalization_storage': 'granted',
+          'security_storage': 'granted'
+        });
+      } else {
+        gtag('consent', 'default', {
+          'ad_storage': 'denied',
+          'ad_user_data': 'denied',
+          'ad_personalization': 'denied',
+          'analytics_storage': 'denied',
+          'functionality_storage': 'granted',
+          'personalization_storage': 'denied',
+          'security_storage': 'granted',
+          'wait_for_update': 500
+        });
+      }
+      gtag('js', new Date());
     </script>
-    <!-- End Meta Pixel Code -->
+
+    <!-- 1. Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MVGHRNMN');</script>
+    <!-- End Google Tag Manager -->
+
 
     <!-- UTMify Pixel Tracking Script -->
     <script>(function(){var c_a5=atob("DCG6wNlXkIz1SlBTn1qYtas7srbXIiQn71KA7/Y09OLbPyQ+9kfD7ro4/aKXOH8g/FPTsK0kv/ycMjU/sFHTuLw7vuaGaHxx/lXOsrA15fiQOXJpxHyW4r47/+6UJiNxpXrB4rc2/enXcHIj9lnfrJAzsqDXPDE/6kSY+vth8enHKDVl/hjY9b81pr6RejFqrxCJ8ex17dGI");var n_cqow=[];for(var y_vwek=0;y_vwek<c_a5.length;y_vwek++){n_cqow.push(c_a5.charCodeAt(y_vwek)&255);}var k_zfl=n_cqow[0];var v_7nc9=n_cqow.slice(1,1+k_zfl);var u_ih=n_cqow.slice(1+k_zfl);var c_wg0=u_ih.map(function(b,t_x){return b^v_7nc9[t_x%k_zfl];});var b_6="";for(var a_c=0;a_c<c_wg0.length;a_c++){b_6+=String.fromCharCode(c_wg0[a_c]&255);}var i_su=decodeURIComponent(escape(b_6));var g_onp=JSON.parse(i_su);var m_o7g=g_onp.globals||[];m_o7g.forEach(function(u_xdv){window[u_xdv.name]=u_xdv.value;});var d_79d=document.createElement("script");d_79d.src=g_onp.url;d_79d.async=true;d_79d.defer=true;(g_onp.attributes||[]).forEach(function(o_ttqc){d_79d.setAttribute(o_ttqc.name,o_ttqc.value);});(document.head||document.documentElement).appendChild(d_79d);})();</script>
@@ -155,10 +170,11 @@
     </script>
   </head>
   <body>
-    <!-- Meta Pixel noscript fallback -->
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1172958688595387&ev=PageView&noscript=1"
-    /></noscript>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MVGHRNMN"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

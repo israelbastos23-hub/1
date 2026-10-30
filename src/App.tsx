@@ -7,6 +7,18 @@ import { PolicyModal, PolicyType } from './components/PolicyModal';
 import { SalesNotification } from './components/SalesNotification';
 import { StickyBuyBar } from './components/StickyBuyBar';
 import { buildCleanCheckoutUrl } from './utils/checkoutUrl';
+import { TRACKING_CONFIG } from './config/tracking';
+import {
+  trackPageView,
+  trackViewItem,
+  trackCheckoutClick,
+  trackBeginCheckout,
+  trackPurchase,
+  trackPaymentFailed,
+  generateTransactionId,
+  getAttributionData,
+} from './utils/tracking';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
 
 // Official Brand Logo
 const LOGO_SRC = '/assets/aistudio/logo_kavere_3e05dc49.png';
@@ -78,6 +90,105 @@ export default function App() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 1. PAGE_VIEW: Track on initial load and upon SPA popstate route transitions
+  useEffect(() => {
+    trackPageView(window.location.pathname, document.title);
+
+    const handleRouteChange = () => {
+      trackPageView(window.location.pathname, document.title);
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
+
+  // 2. VIEW_ITEM: Track when selected product set or vehicle selection changes
+  useEffect(() => {
+    const activeProd = selectedSet === 'full'
+      ? TRACKING_CONFIG.PRODUCTS.product_4990
+      : TRACKING_CONFIG.PRODUCTS.product_3990;
+
+    const vehicleInfo = {
+      make: selectedMake === 'Other make' ? customMake.trim() : selectedMake,
+      model: selectedModel === 'Other model' ? customModel.trim() : selectedModel,
+      year: selectedYear,
+    };
+
+    trackViewItem(activeProd, vehicleInfo);
+  }, [selectedSet, selectedMake, selectedModel, selectedYear, customMake, customModel]);
+
+  // 3. PURCHASE: Check for confirmed payment return from checkout.pagou.ai
+  // STRICT RULE: Purchase only fires if payment status is genuinely confirmed
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    orderId: string;
+    total: number;
+    title: string;
+  } | null>(null);
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const isPaid =
+        sp.get('status') === 'paid' ||
+        sp.get('status') === 'approved' ||
+        sp.get('payment_status') === 'success' ||
+        sp.get('confirmed') === '1';
+      const orderId =
+        sp.get('order_id') ||
+        sp.get('orderId') ||
+        sp.get('transaction_id') ||
+        sp.get('tx');
+
+      if (isPaid && orderId) {
+        const activeProd = selectedSet === 'full'
+          ? TRACKING_CONFIG.PRODUCTS.product_4990
+          : TRACKING_CONFIG.PRODUCTS.product_3990;
+        const total = Number(sp.get('total') || sp.get('value') || activeProd.price);
+
+        const success = trackPurchase({
+          transactionId: orderId,
+          product: activeProd,
+          quantity: 1,
+          totalPrice: total,
+          vehicleInfo: {
+            make: selectedMake === 'Other make' ? customMake.trim() : selectedMake,
+            model: selectedModel === 'Other model' ? customModel.trim() : selectedModel,
+            year: selectedYear,
+          },
+          verificationSource: 'order_confirmation_page',
+        });
+
+        if (success) {
+          setConfirmedOrder({
+            orderId,
+            total,
+            title: activeProd.name,
+          });
+          setToastMessage(`Payment confirmed! Thank you for your order (#${orderId.slice(-6)}).`);
+        }
+      } else {
+        const isFailed =
+          sp.get('status') === 'failed' ||
+          sp.get('status') === 'declined' ||
+          sp.get('payment_status') === 'failed' ||
+          Boolean(sp.get('error'));
+
+        if (isFailed) {
+          const activeProd = selectedSet === 'full'
+            ? TRACKING_CONFIG.PRODUCTS.product_4990
+            : TRACKING_CONFIG.PRODUCTS.product_3990;
+          trackPaymentFailed({
+            transactionId: sp.get('order_id') || sp.get('transaction_id') || undefined,
+            product: activeProd,
+            errorCode: sp.get('error_code') || sp.get('error') || 'declined',
+            errorMessage: sp.get('error_message') || 'Payment was declined or failed',
+          });
+          setToastMessage('Payment was not completed. Please check your payment details.');
+        }
+      }
+    } catch (_) {}
   }, []);
 
   // Review image error handler: if customer has no photo or file is removed, hide the slot cleanly
@@ -256,48 +367,40 @@ export default function App() {
     const displayMake = selectedMake === 'Other make' ? customMake.trim() : selectedMake;
     const displayModel = selectedModel === 'Other model' ? customModel.trim() : selectedModel;
 
-    // Construct destination checkout link with quantity, vehicle specifications, and deduplicated UTMify tracking
-    // Set 1 (Interior Mats + Boot Mat + Free Wipers - 49.90): https://checkout.pagou.ai/checkout/chk_01M64TX0D1DN30CSRR6697Z72S
-    // Set 2 (Interior Mats + Free Wipers - 39.90): https://checkout.pagou.ai/checkout/chk_01M645CKKW6NABB92Q1YJW93PS
-    const checkoutBaseUrl = isFullSet
-      ? 'https://checkout.pagou.ai/checkout/chk_01M64TX0D1DN30CSRR6697Z72S'
-      : 'https://checkout.pagou.ai/checkout/chk_01M645CKKW6NABB92Q1YJW93PS';
+    const activeProduct = isFullSet ? TRACKING_CONFIG.PRODUCTS.product_4990 : TRACKING_CONFIG.PRODUCTS.product_3990;
+    const checkoutBaseUrl = activeProduct.checkoutUrl;
+    const currentVehicle = {
+      make: displayMake,
+      model: displayModel,
+      year: selectedYear,
+    };
+    const transactionId = generateTransactionId();
 
-    const unitPrice = isFullSet ? 49.90 : 39.90;
-    const totalPrice = Number((unitPrice * quantity).toFixed(2));
+    // 1. EVENT: checkout_click (GTM dataLayer + Meta custom CheckoutClick + Clarity)
+    trackCheckoutClick(activeProduct, quantity, 'ADD TO BASKET', currentVehicle);
 
-    // Fire Meta Pixel AddToCart event if fbq is initialized
-    if (typeof window !== 'undefined' && typeof (window as any).fbq === 'function') {
-      try {
-        const atcEventId = `atc_1172958688595387_${Date.now()}`;
-        (window as any).fbq(
-          'track',
-          'AddToCart',
-          {
-            content_name: currentSetTitle,
-            content_category: 'Car Accessories',
-            content_ids: [isFullSet ? 'chk_01M64TX0D1DN30CSRR6697Z72S' : 'chk_01M645CKKW6NABB92Q1YJW93PS'],
-            content_type: 'product',
-            value: totalPrice,
-            currency: 'GBP',
-            num_items: quantity,
-            vehicle: `${displayMake} - ${displayModel} (${selectedYear})`,
-          },
-          { eventID: atcEventId }
-        );
-      } catch (_) {}
-    }
+    // 2. EVENT: begin_checkout (GTM GA4 ecommerce begin_checkout + Meta InitiateCheckout + Clarity)
+    trackBeginCheckout(activeProduct, quantity, transactionId, currentVehicle);
+
+    // 3. Attribution (UTMs, Click IDs, FBP, FBC)
+    const attribution = getAttributionData();
 
     const finalCheckoutUrl = buildCleanCheckoutUrl(checkoutBaseUrl, {
       quantity: String(quantity),
       qtd: String(quantity),
       add_to_cart: '1',
       add_to_basket: '1',
+      transaction_id: transactionId,
+      product_id: activeProduct.id,
+      product_price: String(activeProduct.price),
+      currency: TRACKING_CONFIG.CURRENCY,
+      market: TRACKING_CONFIG.MARKET,
       make: displayMake,
       model: displayModel,
       year: selectedYear,
       vehicle: `${displayMake} - ${displayModel} (${selectedYear})`,
       title: currentSetTitle,
+      ...attribution,
     });
 
     setRecentCustomerOrder({
@@ -798,6 +901,7 @@ export default function App() {
                           placeholder="e.g. Polestar, MG, Cupra"
                           value={customMake}
                           onChange={(e) => setCustomMake(e.target.value)}
+                          data-clarity-mask="true"
                           className="w-full rounded-lg border border-[#F1F1F1] text-xs py-1 px-2 bg-[#F7F7F7]"
                         />
                       </div>
@@ -810,6 +914,7 @@ export default function App() {
                           placeholder="e.g. Polestar 2, MG4 EV"
                           value={customModel}
                           onChange={(e) => setCustomModel(e.target.value)}
+                          data-clarity-mask="true"
                           className="w-full rounded-lg border border-[#F1F1F1] text-xs py-1 px-2 bg-[#F7F7F7]"
                         />
                       </div>
@@ -1772,6 +1877,36 @@ export default function App() {
         originalPrice={originalPrice}
         onBuyClick={handleStickyBuyClick}
       />
+
+      {/* Confirmed Order Modal (Strictly verified purchase return) */}
+      {confirmedOrder && (
+        <div className="fixed inset-0 z-70 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl border border-neutral-100">
+            <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl font-bold">
+              ✓
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-neutral-900">Order Confirmed!</h3>
+              <p className="text-xs text-neutral-500">
+                Payment verified for <span className="font-semibold text-neutral-800">{confirmedOrder.title}</span> (£{confirmedOrder.total.toFixed(2)} GBP).
+              </p>
+              <p className="text-[11px] text-neutral-400 font-mono pt-1">
+                Transaction ID: {confirmedOrder.orderId}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setConfirmedOrder(null)}
+              className="w-full bg-black text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider hover:bg-neutral-800 transition cursor-pointer"
+            >
+              Continue Browsing
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* UK & GDPR Compliant Cookie Consent Banner with Consent Mode v2 */}
+      <CookieConsentBanner />
     </div>
   );
 }

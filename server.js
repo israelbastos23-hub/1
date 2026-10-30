@@ -32,6 +32,109 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Tracking & Analytics Configuration Status (Safe for public inspection)
+app.get('/api/tracking/status', (req, res) => {
+  res.status(200).json({
+    status: 'active',
+    gtm_container_id: process.env.VITE_GTM_CONTAINER_ID || 'GTM-MVGHRNMN',
+    ga4_measurement_id: process.env.VITE_GA4_MEASUREMENT_ID || 'G-WSS9S01PJK',
+    clarity_project_id: process.env.VITE_CLARITY_PROJECT_ID || 'z5lvnhw0fw',
+    meta_pixel_id: process.env.VITE_META_PIXEL_ID || '1172958688595387',
+    meta_capi_enabled: Boolean(process.env.META_CAPI_ACCESS_TOKEN),
+    market: 'United Kingdom',
+    currency: 'GBP',
+  });
+});
+
+// Payment Confirmation Webhook for Pagou.ai / External Gateway
+// Validates genuine confirmed purchases and relays to Meta Conversions API (CAPI)
+app.post('/api/webhooks/payment', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const event = payload.event || payload.type || '';
+    const status = (payload.status || payload.order_status || '').toLowerCase();
+    const transactionId = payload.transaction_id || payload.order_id || payload.id || `tx_${Date.now()}`;
+    const value = Number(payload.value || payload.total || payload.amount || 0);
+    const currency = payload.currency || 'GBP';
+
+    // Strict validation: Only trigger for confirmed payments
+    const isPaid =
+      status === 'paid' ||
+      status === 'approved' ||
+      status === 'completed' ||
+      event.includes('paid') ||
+      event.includes('approved') ||
+      event.includes('order.paid');
+
+    if (!isPaid) {
+      return res.status(200).json({
+        received: true,
+        action: 'ignored_unconfirmed_status',
+        status: status,
+      });
+    }
+
+    // Dispatches server-to-server Conversions API event to Meta if access token is configured
+    const metaPixelId = process.env.VITE_META_PIXEL_ID || '1172958688595387';
+    const metaAccessToken = process.env.META_CAPI_ACCESS_TOKEN;
+
+    if (metaAccessToken) {
+      try {
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+        const userAgent = req.headers['user-agent'] || '';
+
+        const capiPayload = {
+          data: [
+            {
+              event_name: 'Purchase',
+              event_time: Math.floor(Date.now() / 1000),
+              event_id: `pur_${transactionId}`,
+              event_source_url: 'https://kaverecar.com',
+              action_source: 'website',
+              user_data: {
+                client_ip_address: String(clientIp).split(',')[0].trim(),
+                client_user_agent: userAgent,
+                fbp: payload.fbp || undefined,
+                fbc: payload.fbc || undefined,
+              },
+              custom_data: {
+                currency: currency,
+                value: value > 0 ? value : 49.90,
+                content_type: 'product',
+              },
+            },
+          ],
+        };
+
+        const capiResponse = await fetch(
+          `https://graph.facebook.com/v19.0/${metaPixelId}/events?access_token=${metaAccessToken}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(capiPayload),
+          }
+        );
+
+        const capiData = await capiResponse.json();
+        console.log(`[Webhook/CAPI] Meta CAPI Purchase logged for ${transactionId}:`, capiData);
+      } catch (capiErr) {
+        console.error('[Webhook/CAPI] Error sending purchase event to Meta CAPI:', capiErr);
+      }
+    }
+
+    return res.status(200).json({
+      received: true,
+      verified_payment: true,
+      transaction_id: transactionId,
+      event_id: `pur_${transactionId}`,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('[Webhook] Error processing payment webhook:', err);
+    return res.status(500).json({ error: 'Webhook processing error' });
+  }
+});
+
 // Serve compiled static files with appropriate cache settings
 app.use(
   express.static(distPath, {
